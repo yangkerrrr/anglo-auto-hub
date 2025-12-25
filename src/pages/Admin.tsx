@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Car, Eye, EyeOff, Search, LogOut } from "lucide-react";
+import { Plus, Pencil, Trash2, Car, Eye, EyeOff, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +25,8 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CarForm from "@/components/admin/CarForm";
+import AdminAuth from "@/components/admin/AdminAuth";
 import { initialCarListings, CarListing } from "@/data/carListings";
-import { Link } from "react-router-dom";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -106,6 +106,7 @@ const Admin = () => {
   const soldCount = cars.filter((c) => c.sold).length;
 
   return (
+    <AdminAuth>
     <div className="min-h-screen flex flex-col bg-secondary/30">
       <Header />
 
@@ -311,6 +312,7 @@ const Admin = () => {
 
       <Footer />
     </div>
+    </AdminAuth>
   );
 };
 
