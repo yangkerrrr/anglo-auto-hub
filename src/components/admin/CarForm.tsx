@@ -61,7 +61,7 @@ const CarForm = ({ initialData, onSubmit, isEditing = false }: CarFormProps) => 
         color: formData.color,
       });
 
-      const response = await fetch(`https://server.yingnetwork.online/api/recommend-price?${params}`);
+      const response = await fetch(`https://api.yingnetwork.online/api/recommend-price?${params}`);
       
       if (!response.ok) {
         throw new Error("Failed to get price recommendation");
