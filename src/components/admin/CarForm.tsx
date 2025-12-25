@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CarListing } from "@/data/carListings";
+import { Sparkles, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface CarFormProps {
   initialData?: CarListing;
@@ -34,6 +36,56 @@ const CarForm = ({ initialData, onSubmit, isEditing = false }: CarFormProps) => 
     features: initialData?.features?.join(", ") || "",
     sold: initialData?.sold || false,
   });
+  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+
+  const handleGetAIPrice = async () => {
+    if (!formData.make || !formData.model || !formData.year) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in make, model, and year first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingPrice(true);
+    try {
+      const params = new URLSearchParams({
+        make: formData.make,
+        model: formData.model,
+        year: formData.year.toString(),
+        mileage: formData.mileage.toString(),
+        fuelType: formData.fuelType,
+        transmission: formData.transmission,
+        bodyType: formData.bodyType,
+        color: formData.color,
+      });
+
+      const response = await fetch(`http://67.217.243.187:5000/api/recommend-price?${params}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to get price recommendation");
+      }
+
+      const data = await response.json();
+      
+      if (data.recommendedPrice) {
+        setFormData({ ...formData, price: data.recommendedPrice });
+        toast({
+          title: "Price recommended",
+          description: `AI suggests R${data.recommendedPrice.toLocaleString()}${data.confidence ? ` (${Math.round(data.confidence * 100)}% confidence)` : ""}`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not get price recommendation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingPrice(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,16 +140,32 @@ const CarForm = ({ initialData, onSubmit, isEditing = false }: CarFormProps) => 
             required
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Price (R) *</label>
+      <div>
+        <label className="block text-sm font-medium mb-2">Price (R) *</label>
+        <div className="flex gap-2">
           <Input
             type="number"
             min={0}
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) })}
             required
+            className="flex-1"
           />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGetAIPrice}
+            disabled={isLoadingPrice}
+          >
+            {isLoadingPrice ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            <span className="ml-1">AI Price</span>
+          </Button>
         </div>
+      </div>
         <div>
           <label className="block text-sm font-medium mb-2">Mileage (km) *</label>
           <Input
