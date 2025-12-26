@@ -1,14 +1,30 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Phone, Mail, Gauge, Fuel, Settings2, Calendar, Palette, MapPin } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Gauge, Fuel, Settings2, Calendar, Palette, MapPin, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { initialCarListings } from "@/data/carListings";
+import { useCars } from "@/hooks/useCars";
 
 const CarDetail = () => {
   const { id } = useParams();
-  const car = initialCarListings.find((c) => c.id === id);
+  const { cars, loading } = useCars();
+  const car = cars.find((c) => c.id === id);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            <p className="text-muted-foreground mt-2">Loading vehicle details...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!car) {
     return (

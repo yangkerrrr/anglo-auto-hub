@@ -9,11 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CarListing } from "@/data/carListings";
+import { Car } from "@/hooks/useCars";
 
 interface SearchFiltersProps {
-  cars: CarListing[];
-  onFilterChange: (filteredCars: CarListing[]) => void;
+  cars: Car[];
+  onFilterChange: (filteredCars: Car[]) => void;
 }
 
 const SearchFilters = ({ cars, onFilterChange }: SearchFiltersProps) => {

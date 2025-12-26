@@ -1,16 +1,18 @@
 import { useState, useCallback } from "react";
+import { RefreshCw } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CarCard from "@/components/CarCard";
 import SearchFilters from "@/components/SearchFilters";
-import { initialCarListings, CarListing } from "@/data/carListings";
+import { useCars, Car } from "@/hooks/useCars";
 
 const Showroom = () => {
-  const availableCars = initialCarListings.filter((car) => !car.sold);
-  const [filteredCars, setFilteredCars] = useState<CarListing[]>(availableCars);
+  const { cars, loading } = useCars();
+  const availableCars = cars.filter((car) => !car.sold);
+  const [filteredCars, setFilteredCars] = useState<Car[]>([]);
 
-  const handleFilterChange = useCallback((cars: CarListing[]) => {
-    setFilteredCars(cars);
+  const handleFilterChange = useCallback((filtered: Car[]) => {
+    setFilteredCars(filtered);
   }, []);
 
   return (
@@ -38,42 +40,52 @@ const Showroom = () => {
             <SearchFilters cars={availableCars} onFilterChange={handleFilterChange} />
           </div>
 
-          {/* Results count */}
-          <div className="mb-6">
-            <p className="text-muted-foreground">
-              Showing <span className="font-semibold text-foreground">{filteredCars.length}</span> vehicles
-            </p>
-          </div>
-
-          {/* Cars Grid */}
-          {filteredCars.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCars.map((car) => (
-                <CarCard key={car.id} car={car} />
-              ))}
+          {/* Loading State */}
+          {loading ? (
+            <div className="text-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground mt-2">Loading vehicles...</p>
             </div>
           ) : (
-            <div className="text-center py-20">
-              <div className="h-24 w-24 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-                <svg
-                  className="h-12 w-12 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+            <>
+              {/* Results count */}
+              <div className="mb-6">
+                <p className="text-muted-foreground">
+                  Showing <span className="font-semibold text-foreground">{filteredCars.length}</span> vehicles
+                </p>
               </div>
-              <h3 className="font-display text-xl font-bold mb-2">No vehicles found</h3>
-              <p className="text-muted-foreground">
-                Try adjusting your search or filter criteria
-              </p>
-            </div>
+
+              {/* Cars Grid */}
+              {filteredCars.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredCars.map((car) => (
+                    <CarCard key={car.id} car={car} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <div className="h-24 w-24 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+                    <svg
+                      className="h-12 w-12 text-muted-foreground"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="font-display text-xl font-bold mb-2">No vehicles found</h3>
+                  <p className="text-muted-foreground">
+                    Try adjusting your search or filter criteria
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

@@ -1,10 +1,10 @@
-import { CarListing } from "@/data/carListings";
+import { Car } from "@/hooks/useCars";
 import { Link } from "react-router-dom";
 import { Gauge, Fuel, Settings2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CarCardProps {
-  car: CarListing;
+  car: Car;
 }
 
 const CarCard = ({ car }: CarCardProps) => {

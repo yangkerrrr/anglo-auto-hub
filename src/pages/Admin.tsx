@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Car, Eye, EyeOff, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Car, Eye, EyeOff, Search, RefreshCw, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,18 +21,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CarForm from "@/components/admin/CarForm";
 import AdminAuth from "@/components/admin/AdminAuth";
-import { initialCarListings, CarListing } from "@/data/carListings";
+import { useCars, Car as CarType } from "@/hooks/useCars";
 
 const Admin = () => {
-  const { toast } = useToast();
-  const [cars, setCars] = useState<CarListing[]>(initialCarListings);
+  const { cars, loading, error, fetchCars, addCar, updateCar, deleteCar, toggleSoldStatus, initializeTable } = useCars();
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingCar, setEditingCar] = useState<CarListing | null>(null);
+  const [editingCar, setEditingCar] = useState<CarType | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -52,54 +50,40 @@ const Admin = () => {
     }).format(price);
   };
 
-  const handleAddCar = (carData: Omit<CarListing, "id" | "createdAt">) => {
-    const newCar: CarListing = {
-      ...carData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    setCars([newCar, ...cars]);
-    setIsAddDialogOpen(false);
-    toast({
-      title: "Success!",
-      description: "Vehicle added successfully.",
-    });
+  const handleAddCar = async (carData: Omit<CarType, "id" | "createdAt">) => {
+    try {
+      await addCar(carData);
+      setIsAddDialogOpen(false);
+    } catch {
+      // Error handled in hook
+    }
   };
 
-  const handleEditCar = (carData: Omit<CarListing, "id" | "createdAt">) => {
+  const handleEditCar = async (carData: Omit<CarType, "id" | "createdAt">) => {
     if (!editingCar) return;
-    const updatedCars = cars.map((car) =>
-      car.id === editingCar.id
-        ? { ...carData, id: editingCar.id, createdAt: editingCar.createdAt }
-        : car
-    );
-    setCars(updatedCars);
-    setIsEditDialogOpen(false);
-    setEditingCar(null);
-    toast({
-      title: "Success!",
-      description: "Vehicle updated successfully.",
-    });
+    try {
+      await updateCar(editingCar.id, { ...carData, id: editingCar.id, createdAt: editingCar.createdAt });
+      setIsEditDialogOpen(false);
+      setEditingCar(null);
+    } catch {
+      // Error handled in hook
+    }
   };
 
-  const handleDeleteCar = (id: string) => {
-    setCars(cars.filter((car) => car.id !== id));
-    toast({
-      title: "Deleted",
-      description: "Vehicle removed from inventory.",
-    });
+  const handleDeleteCar = async (id: string) => {
+    try {
+      await deleteCar(id);
+    } catch {
+      // Error handled in hook
+    }
   };
 
-  const toggleSoldStatus = (id: string) => {
-    setCars(
-      cars.map((car) =>
-        car.id === id ? { ...car, sold: !car.sold } : car
-      )
-    );
-    toast({
-      title: "Status Updated",
-      description: "Vehicle status has been updated.",
-    });
+  const handleToggleSoldStatus = async (id: string) => {
+    try {
+      await toggleSoldStatus(id);
+    } catch {
+      // Error handled in hook
+    }
   };
 
   const availableCount = cars.filter((c) => !c.sold).length;
@@ -118,21 +102,41 @@ const Admin = () => {
               <h1 className="font-display text-3xl font-bold">Admin Panel</h1>
               <p className="text-muted-foreground">Manage your vehicle inventory</p>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4" />
-                  Add Vehicle
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Add New Vehicle</DialogTitle>
-                </DialogHeader>
-                <CarForm onSubmit={handleAddCar} />
-              </DialogContent>
-            </Dialog>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={initializeTable} title="Initialize database table">
+                <Database className="h-4 w-4" />
+                Init DB
+              </Button>
+              <Button variant="outline" onClick={fetchCars} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4" />
+                    Add Vehicle
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Add New Vehicle</DialogTitle>
+                  </DialogHeader>
+                  <CarForm onSubmit={handleAddCar} />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
+              <p className="text-destructive text-sm">{error}</p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Make sure to click "Init DB" first to create the cars table in your Neon database.
+              </p>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -184,7 +188,16 @@ const Admin = () => {
             </div>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground mt-2">Loading vehicles...</p>
+            </div>
+          )}
+
           {/* Table */}
+          {!loading && (
           <div className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -235,7 +248,7 @@ const Admin = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => toggleSoldStatus(car.id)}
+                            onClick={() => handleToggleSoldStatus(car.id)}
                             title={car.sold ? "Mark as Available" : "Mark as Sold"}
                           >
                             {car.sold ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -304,9 +317,13 @@ const Admin = () => {
             {filteredCars.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No vehicles found</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Click "Init DB" to create the table, then add your first vehicle.
+                </p>
               </div>
             )}
           </div>
+          )}
         </div>
       </main>
 
