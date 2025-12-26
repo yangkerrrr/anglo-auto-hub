@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,8 +34,8 @@ const SearchFilters = ({ cars, onFilterChange }: SearchFiltersProps) => {
     return uniqueTypes;
   }, [cars]);
 
-  // Apply filters
-  useMemo(() => {
+  // Compute filtered cars
+  const filteredCars = useMemo(() => {
     let filtered = cars.filter((car) => !car.sold);
 
     // Search term
@@ -65,8 +65,13 @@ const SearchFilters = ({ cars, onFilterChange }: SearchFiltersProps) => {
       filtered = filtered.filter((car) => car.bodyType === bodyType);
     }
 
-    onFilterChange(filtered);
-  }, [searchTerm, make, priceRange, bodyType, cars, onFilterChange]);
+    return filtered;
+  }, [searchTerm, make, priceRange, bodyType, cars]);
+
+  // Notify parent of filter changes
+  useEffect(() => {
+    onFilterChange(filteredCars);
+  }, [filteredCars, onFilterChange]);
 
   const clearFilters = () => {
     setSearchTerm("");
