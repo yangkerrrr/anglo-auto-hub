@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Shield, Banknote, Car, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Shield, Banknote, Car, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CarCard from "@/components/CarCard";
-import { initialCarListings } from "@/data/carListings";
+import { useCars } from "@/hooks/useCars";
 
 const Index = () => {
+  const { cars, loading } = useCars();
+  
   // Get featured cars (first 6 available)
-  const featuredCars = initialCarListings.filter((car) => !car.sold).slice(0, 6);
+  const featuredCars = cars.filter((car) => !car.sold).slice(0, 6);
 
   const benefits = [
     {
@@ -121,11 +123,22 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredCars.map((car) => (
-              <CarCard key={car.id} car={car} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground mt-2">Loading vehicles...</p>
+            </div>
+          ) : featuredCars.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCars.map((car) => (
+                <CarCard key={car.id} car={car} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No vehicles available at the moment. Check back soon!</p>
+            </div>
+          )}
 
           <div className="text-center mt-12">
             <Link to="/showroom">
