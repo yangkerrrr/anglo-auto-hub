@@ -1,1 +1,7 @@
 project_id = "jmuhmkujryoqzlojdcqk"
+
+[functions.cars]
+verify_jwt = false
+
+[functions.init-cars-table]
+verify_jwt = false
